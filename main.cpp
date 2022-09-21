@@ -1,5 +1,4 @@
 #include <string>
-#include <utility>
 #include <array>
 
 template<const std::string_view &... Strs>
@@ -21,55 +20,33 @@ struct cexpr_string_join {
   static constexpr std::string_view value{arr.data(), arr.size() - 1};
 };
 
-constexpr std::array<const std::pair<const std::string_view, int>, 13> lookupTable{{
-                                                                                       {"M", 1000},
-                                                                                       {"CM", 900},
-                                                                                       {"D", 500},
-                                                                                       {"CD", 400},
-                                                                                       {"C", 100},
-                                                                                       {"XC", 90},
-                                                                                       {"L", 50},
-                                                                                       {"XL", 40},
-                                                                                       {"X", 10},
-                                                                                       {"IX", 9},
-                                                                                       {"V", 5},
-                                                                                       {"IV", 4},
-                                                                                       {"I", 1}
-                                                                                   }};
+constexpr std::array<const std::pair<const std::string_view, int>, 13> lookupTable
+    {{{"M", 1000}, {"CM", 900}, {"D", 500}, {"CD", 400}, {"C", 100}, {"XC", 90}, {"L", 50}, {"XL", 40}, {"X", 10},
+      {"IX", 9}, {"V", 5}, {"IV", 4}, {"I", 1}}};
 
-
-
-template<int remainder, int numeralIndex, const std::string_view & roman>
-static constexpr std::string_view toRomanRec() {
+template<int remainder, int numeralIndex, const std::string_view &roman>
+static constexpr std::string_view toRoman() {
+  constexpr auto p = lookupTable[numeralIndex];
   if constexpr(remainder == 0) {
     return roman;
+  } else if constexpr(remainder >= p.second) {
+    return toRoman<remainder - p.second,
+                   numeralIndex,
+                   cexpr_string_join<roman, lookupTable[numeralIndex].first>::value>();
+  } else {
+    return toRoman<remainder, numeralIndex + 1, roman>();
   }
-  constexpr auto p = lookupTable[numeralIndex];
-  if constexpr(remainder >= p.second) {
-    return toRomanRec<remainder - p.second, numeralIndex, cexpr_string_join<roman, lookupTable[numeralIndex].first>::value>();
-  }
-//  else {
-//    return toRomanRec<remainder, numeralIndex + 1, roman>();
-//  }
-  return roman;
 }
 
-static constexpr std::string_view str = "";
+static constexpr std::string_view str{""};
 template<int number>
 static constexpr std::string_view solution() {
-  return toRomanRec<number, 0, str>();
-//  auto x =  toRomanRec(number, 0, "");
-//  return x;
-}
-
-template<int i>
-static constexpr auto test(){
-  return lookupTable[i].first;
+  return toRoman<number, 0, str>();
 }
 
 #include <iostream>
 int main() {
-  auto x = solution<1000>();
+  constexpr auto x = solution<2022>();
+  static_assert(x == "MMXXII");
   std::cout << x << std::endl;
-  auto y = 2;
 }
